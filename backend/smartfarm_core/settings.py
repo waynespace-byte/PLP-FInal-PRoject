@@ -109,3 +109,13 @@ AUTH_USER_MODEL = 'users.User'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# M-Pesa settings
+MPESA_CONSUMER_KEY = 'your_consumer_key'
+MPESA_CONSUMER_SECRET = 'your_consumer_secret'
+MPESA_SHORTCODE = 'your_shortcode'
+MPESA_PASSKEY = 'your_passkey'
+MPESA_BASE_URL = 'https://sandbox.safaricom.co.ke'  # Use live URL for production
+
+# OpenWeather API key
+OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY', '660ef0c616f18c7367011aed19083b46') 

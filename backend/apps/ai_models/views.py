@@ -1,3 +1,5 @@
+import requests
+from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -5,8 +7,19 @@ import tensorflow as tf
 import numpy as np
 from PIL import Image
 import io
-from .models import Diagnosis
+from .models import Diagnosis, WeatherData, CropRecommendation, DiseaseDetection
 from .serializers import DiagnosisSerializer
+
+class WeatherView(APIView):  # AI Weather Prediction
+    def get(self, request):
+        location = request.query_params.get('location')
+        # Integrate OpenWeather API
+        api_key = settings.OPENWEATHER_API_KEY
+        url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid={api_key}"
+        response = requests.get(url).json()
+        # Cache and return
+        WeatherData.objects.create(location=location, date=response['dt'], temperature=response['main']['temp'], humidity=response['main']['humidity'], rainfall=response.get('rain', {}).get('1h', 0))
+        return Response(response)
 
 class CropAdvisorView(APIView):
     def post(self, request):

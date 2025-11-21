@@ -1,7 +1,8 @@
 from django.urls import path
-from .views import CropAdvisorView, DiseaseDetectionView
+from .views import CropAdvisorView, DiseaseDetectionView, WeatherView
 
 urlpatterns = [
-    path('advisor/recommend/', CropAdvisorView.as_view(), name='crop-advisor'),
-    path('diagnose/', DiseaseDetectionView.as_view(), name='disease-detect'),
+    path('weather/', WeatherView.as_view(), name='weather'),
+    path('crop-advisor/', CropAdvisorView.as_view(), name='crop-advisor'),  
+    path('disease-detect/', DiseaseDetectionView.as_view(), name='disease-detect'), 
 ]
