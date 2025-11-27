@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Loader2, Search, ShoppingBag, ShoppingCart } from 'lucide-react';
 import { MpesaPayment } from '@/components/MpesaPayment';
-import api from '@/services/api';
+import { marketplaceAPI } from '@/services/api';  // Use updated api.ts
 import { toast } from '@/hooks/use-toast';
 
 interface Product {
@@ -32,7 +32,7 @@ const Marketplace = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await api.get('/marketplace/products/');
+      const response = await marketplaceAPI.getProducts();  // Use api.ts export (matches backend /marketplace/products/)
       setProducts(response.data.results || response.data);
     } catch (error) {
       toast({
@@ -56,6 +56,7 @@ const Marketplace = () => {
       description: `You have successfully purchased ${selectedProduct?.name}`,
     });
     setSelectedProduct(null);
+    setShowPayment(false);
   };
 
   const filteredProducts = products.filter(

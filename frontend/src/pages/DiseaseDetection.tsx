@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Leaf, Loader2, Upload } from 'lucide-react';
-import api from '@/services/api';
+import { aiAPI } from '@/services/api';  // Use updated api.ts
 import { toast } from '@/hooks/use-toast';
 
 const DiseaseDetection = () => {
@@ -11,7 +11,7 @@ const DiseaseDetection = () => {
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [diagnosis, setDiagnosis] = useState<any>(null);
+  const [diagnosis, setDiagnosis] = useState<Record<string, unknown> | null>(null);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -37,18 +37,13 @@ const DiseaseDetection = () => {
     formData.append('image', selectedImage);
 
     try {
-      const response = await api.post('/ai/disease-detection/', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      
+      const response = await aiAPI.diseaseDetection(formData);  // Use api.ts export (matches backend /ai/disease-detection/)
       setDiagnosis(response.data);
       toast({
         title: 'Analysis Complete',
         description: 'Disease detection results are ready',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Error',
         description: error.response?.data?.detail || 'Failed to analyze image',
@@ -149,13 +144,13 @@ const DiseaseDetection = () => {
           {diagnosis && (
             <Card>
               <CardHeader>
-                <CardTitle>Diagnosis Results</CardTitle>
-                <CardDescription>AI-detected disease information</CardDescription>
+                <CardTitle>Disease Detection Result</CardTitle>
+                <CardDescription>AI analysis of the uploaded image</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="p-4 bg-muted rounded-lg">
-                  <h3 className="font-semibold text-lg mb-2">{diagnosis.disease_name}</h3>
-                  <p className="text-sm mb-4">{diagnosis.description}</p>
+                  <h3 className="font-semibold text-lg mb-2">{diagnosis.disease_name || diagnosis.disease}</h3>
+                  <p className="text-sm text-muted-foreground mb-2">{diagnosis.description}</p>
                   
                   <div className="space-y-3">
                     <div>

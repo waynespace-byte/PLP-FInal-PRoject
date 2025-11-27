@@ -13,7 +13,7 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access');  // Fix: Use 'access' to match backend
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -31,20 +31,21 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       
-      const refreshToken = localStorage.getItem('refresh_token');
+      const refreshToken = localStorage.getItem('refresh');  // Fix: Use 'refresh' to match backend
       if (refreshToken) {
         try {
           const response = await axios.post(`${API_BASE_URL}/auth/token/refresh/`, {
-            refresh: refreshToken,
+            refresh: refreshToken,  // Fix: Use 'refresh' key for payload
           });
           
-          localStorage.setItem('access_token', response.data.access);
+          localStorage.setItem('access', response.data.access);  // Fix: Store as 'access'
           originalRequest.headers.Authorization = `Bearer ${response.data.access}`;
           
           return api(originalRequest);
         } catch (refreshError) {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
+          // Clear tokens and redirect on refresh failure
+          localStorage.removeItem('access');
+          localStorage.removeItem('refresh');
           window.location.href = '/auth';
           return Promise.reject(refreshError);
         }
@@ -54,5 +55,34 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Modular API exports for easy use in components
+export const authAPI = {
+  login: (data: { email: string; password: string }) => api.post('/auth/login/', data),
+  register: (data: unknown) => api.post('/auth/register/', data),
+  profile: () => api.get('/auth/profile/'),
+};
+
+export const farmAPI = {
+  getFarms: () => api.get('/farms/'),
+  createFarm: (data: unknown) => api.post('/farms/', data),
+};
+
+export const aiAPI = {
+  getWeather: (location: string) => api.get(`/ai/weather/?location=${location}`),
+  cropAdvisor: (data: unknown) => api.post('/ai/crop-advisor/', data),
+  diseaseDetection: (formData: FormData) => api.post('/ai/disease-detection/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+};
+
+export const marketplaceAPI = {
+  getProducts: () => api.get('/marketplace/products/'),
+};
+
+export const paymentAPI = {
+  initiateMpesa: (data: unknown) => api.post('/payments/mpesa/initiate/', data),
+  checkMpesaStatus: (requestId: string) => api.get(`/payments/mpesa/status/${requestId}/`),
+};
 
 export default api;

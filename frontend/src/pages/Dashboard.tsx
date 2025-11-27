@@ -1,107 +1,169 @@
-import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Brain, Cloud, Leaf, ShoppingBag, LogOut, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Loader2, Thermometer, Droplets, Wind, Tractor } from 'lucide-react';
+import { aiAPI, farmAPI } from '@/services/api';
+import { toast } from '@/hooks/use-toast';
+
+interface WeatherData {
+  temperature: number;
+  humidity: number;
+  wind_speed: number;
+}
+
+interface Farm {
+  id: string;
+  name: string;
+  location: string;
+  size: number;
+}
 
 const Dashboard = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [farms, setFarms] = useState<Farm[] | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const features = [
-    {
-      title: 'AI Crop Advisor',
-      description: 'Get intelligent crop recommendations based on weather and soil',
-      icon: Brain,
-      onClick: () => navigate('/crop-advisor'),
-    },
-    {
-      title: 'Disease Detection',
-      description: 'Identify crop diseases using AI-powered image analysis',
-      icon: Leaf,
-      onClick: () => navigate('/disease-detection'),
-    },
-    {
-      title: 'Marketplace',
-      description: 'Buy seeds, fertilizers, and farm equipment',
-      icon: ShoppingBag,
-      onClick: () => navigate('/marketplace'),
-    },
-    {
-      title: 'Weather Forecast',
-      description: 'Get accurate weather predictions for your farm',
-      icon: Cloud,
-      onClick: () => navigate('/weather'),
-    },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [weatherResponse, farmsResponse] = await Promise.all([
+          aiAPI.getWeather('Nairobi'),  // Default location
+          farmAPI.getFarms(),
+        ]);
+        setWeatherData(weatherResponse.data.weather as WeatherData);
+        setFarms(farmsResponse.data as Farm[]);
+      } catch (error: unknown) {
+        const errorMessage = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Failed to load dashboard data';
+        toast({
+          title: 'Error',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                <Leaf className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-foreground">SmartFarmLink</h1>
-                <p className="text-sm text-muted-foreground">Farmer Dashboard</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <User className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm font-medium">
-                  {user?.first_name} {user?.last_name}
-                </span>
-              </div>
-              <Button variant="outline" size="sm" onClick={logout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="container mx-auto p-6 space-y-6">
+      <h1 className="text-3xl font-bold">Dashboard</h1>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-foreground mb-2">
-            Welcome back, {user?.first_name}!
-          </h2>
-          <p className="text-muted-foreground">
-            Access all your farming tools and insights from one place
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {features.map((feature) => {
-            const Icon = feature.icon;
-            return (
-              <Card
-                key={feature.title}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={feature.onClick}
-              >
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <Icon className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle>{feature.title}</CardTitle>
-                      <CardDescription>{feature.description}</CardDescription>
-                    </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {weatherData && (
+          <>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2">
+                  <Thermometer className="h-4 w-4 text-red-500" />
+                  <div>
+                    <p className="text-sm font-medium">Temperature</p>
+                    <p className="text-2xl font-bold">{weatherData.temperature}°C</p>
                   </div>
-                </CardHeader>
-              </Card>
-            );
-          })}
-        </div>
-      </main>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2">
+                  <Droplets className="h-4 w-4 text-blue-500" />
+                  <div>
+                    <p className="text-sm font-medium">Humidity</p>
+                    <p className="text-2xl font-bold">{weatherData.humidity}%</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2">
+                  <Wind className="h-4 w-4 text-green-500" />
+                  <div>
+                    <p className="text-sm font-medium">Wind Speed</p>
+                    <p className="text-2xl font-bold">{weatherData.wind_speed} km/h</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2">
+              <Tractor className="h-4 w-4 text-orange-500" />
+              <div>
+                <p className="text-sm font-medium">Total Farms</p>
+                <p className="text-2xl font-bold">{farms?.length || 0}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {farms && farms.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Farms</CardTitle>
+            <CardDescription>Manage your farm locations</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {farms.map((farm: Farm) => (
+                <div key={farm.id} className="flex justify-between items-center p-4 border rounded-lg">
+                  <div>
+                    <h3 className="font-semibold">{farm.name}</h3>
+                    <p className="text-sm text-muted-foreground">{farm.location} - {farm.size} acres</p>
+                  </div>
+                  <Button variant="outline">View Details</Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Crop Advisor</CardTitle>
+            <CardDescription>Get personalized crop recommendations</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full">Go to Crop Advisor</Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Disease Detection</CardTitle>
+            <CardDescription>Upload images to detect plant diseases</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full">Go to Disease Detection</Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Marketplace</CardTitle>
+            <CardDescription>Buy and sell agricultural products</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full">Go to Marketplace</Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Smartphone } from 'lucide-react';
-import api from '@/services/api';
+import { paymentAPI } from '@/services/api';  // Use paymentAPI from api.ts for backend compatibility
 import { toast } from '@/hooks/use-toast';
 
 interface MpesaPaymentProps {
@@ -18,7 +18,8 @@ interface MpesaPaymentProps {
 export const MpesaPayment = ({ open, onClose, amount, purpose, onSuccess }: MpesaPaymentProps) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
-  const [checkoutRequestId, setCheckoutRequestId] = useState<string | null>(null);
+  // Removed unused checkoutRequestId to fix brown underline (warning)
+  // const [checkoutRequestId, setCheckoutRequestId] = useState<string | null>(null);
 
   const handleInitiatePayment = async () => {
     if (!phoneNumber || phoneNumber.length < 10) {
@@ -32,13 +33,7 @@ export const MpesaPayment = ({ open, onClose, amount, purpose, onSuccess }: Mpes
 
     setLoading(true);
     try {
-      const response = await api.post('/payments/mpesa/initiate/', {
-        phone_number: phoneNumber,
-        amount: amount,
-        description: purpose,
-      });
-
-      setCheckoutRequestId(response.data.checkout_request_id);
+      const response = await paymentAPI.initiateMpesa({ phone_number: phoneNumber, amount, description: purpose });  // Matches backend /payments/mpesa/initiate/
       
       toast({
         title: 'Payment Initiated',
@@ -47,10 +42,11 @@ export const MpesaPayment = ({ open, onClose, amount, purpose, onSuccess }: Mpes
 
       // Start polling for payment status
       pollPaymentStatus(response.data.checkout_request_id);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      console.error('Mpesa error:', error);  // Added logging as requested
       toast({
         title: 'Error',
-        description: error.response?.data?.detail || 'Failed to initiate payment',
+        description: (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Failed to initiate payment',  // Fixed red underline with proper typing
         variant: 'destructive',
       });
       setLoading(false);
@@ -63,7 +59,7 @@ export const MpesaPayment = ({ open, onClose, amount, purpose, onSuccess }: Mpes
     
     const checkStatus = async () => {
       try {
-        const response = await api.get(`/payments/mpesa/status/${requestId}/`);
+        const response = await paymentAPI.checkMpesaStatus(requestId);  // Matches backend /payments/mpesa/status/
         
         if (response.data.status === 'completed') {
           toast({
@@ -91,7 +87,8 @@ export const MpesaPayment = ({ open, onClose, amount, purpose, onSuccess }: Mpes
           });
           setLoading(false);
         }
-      } catch (error) {
+      } catch (error: unknown) {
+        console.error('Mpesa status error:', error);  // Added logging
         if (attempts < maxAttempts) {
           attempts++;
           setTimeout(checkStatus, 3000);
@@ -107,7 +104,6 @@ export const MpesaPayment = ({ open, onClose, amount, purpose, onSuccess }: Mpes
   const handleClose = () => {
     if (!loading) {
       setPhoneNumber('');
-      setCheckoutRequestId(null);
       onClose();
     }
   };

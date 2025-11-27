@@ -4,15 +4,24 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Brain, Loader2 } from 'lucide-react';
-import api from '@/services/api';
+import { aiAPI } from '@/services/api';  // Use updated api.ts
 import { toast } from '@/hooks/use-toast';
+
+interface CropRecommendation {
+  crops: Array<{
+    name: string;
+    description: string;
+    yield: string;
+    season: string;
+    price: string;
+  }>;
+}
 
 const CropAdvisor = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [recommendation, setRecommendation] = useState<any>(null);
+  const [recommendation, setRecommendation] = useState<CropRecommendation | null>(null);
   
   const [formData, setFormData] = useState({
     location: '',
@@ -27,16 +36,17 @@ const CropAdvisor = () => {
     setLoading(true);
     
     try {
-      const response = await api.post('/ai/crop-recommendation/', formData);
-      setRecommendation(response.data);
+      const response = await aiAPI.cropAdvisor(formData);  // Matches backend /ai/crop-advisor/
+      setRecommendation(response.data as CropRecommendation);
       toast({
         title: 'Success',
         description: 'Crop recommendation generated successfully',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      console.error('CropAdvisor error:', error);  // Added logging for debugging
       toast({
         title: 'Error',
-        description: error.response?.data?.detail || 'Failed to get recommendation',
+        description: (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Failed to get recommendation',
         variant: 'destructive',
       });
     } finally {
@@ -159,7 +169,7 @@ const CropAdvisor = () => {
                 <CardDescription>Based on your farm conditions</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {recommendation.crops?.map((crop: any, index: number) => (
+                {recommendation.crops.map((crop: { name: string; description: string; yield: string; season: string; price: string }, index: number) => (
                   <div key={index} className="p-4 bg-muted rounded-lg">
                     <h3 className="font-semibold text-lg mb-2">{crop.name}</h3>
                     <p className="text-sm text-muted-foreground mb-2">{crop.description}</p>

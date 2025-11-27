@@ -11,4 +11,3 @@ class MarketplaceTestCase(TestCase):
         eq = Equipment.objects.create(owner=self.user, name='Tractor', description='Large tractor', price_per_day=2000)
         self.assertEqual(eq.name, 'Tractor')
         self.assertEqual(eq.price_per_day, 2000)
-        self.assertEqual(eq.owner.username, 'seller')

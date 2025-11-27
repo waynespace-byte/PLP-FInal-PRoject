@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '@/services/api';
+import { authAPI } from '@/services/api';  // Use updated api.ts exports
 import { toast } from '@/hooks/use-toast';
 
 interface User {
@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access');  // Fix: Use 'access' to match backend
     if (token) {
       fetchUserProfile();
     } else {
@@ -45,12 +45,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserProfile = async () => {
     try {
-      const response = await api.get('/auth/profile/');
+      const response = await authAPI.profile();  // Use api.ts export
       setUser(response.data);
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('access');  // Fix: Use 'access'
+      localStorage.removeItem('refresh');  // Fix: Use 'refresh'
     } finally {
       setLoading(false);
     }
@@ -58,10 +58,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await api.post('/auth/login/', { email, password });
+      console.log('Sending login request:', { email, password });  // Debug: Log request data
+      const response = await authAPI.login({ email, password });
+
+      console.log('Login response:', response);
       
-      localStorage.setItem('access_token', response.data.access);
-      localStorage.setItem('refresh_token', response.data.refresh);
+      localStorage.setItem('access', response.data.access);  // Fix: Store as 'access'
+      localStorage.setItem('refresh', response.data.refresh);  // Fix: Store as 'refresh'
       
       await fetchUserProfile();
       
@@ -69,25 +72,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: 'Success',
         description: 'Logged in successfully',
       });
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Login failed',
-        variant: 'destructive',
-      });
-      throw error;
+    } catch (error: unknown) {
+      console.error('Login error:', error);  // Debug: Log error
+      throw error;  // Re-throw for Auth.tsx to handle
     }
   };
 
   const register = async (data: RegisterData) => {
     try {
-      await api.post('/auth/register/', data);
+      await authAPI.register(data);  // Use api.ts export
       
       toast({
         title: 'Success',
         description: 'Account created successfully. Please login.',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Error',
         description: error.response?.data?.detail || 'Registration failed',
@@ -98,8 +97,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('access');  // Fix: Use 'access'
+    localStorage.removeItem('refresh');  // Fix: Use 'refresh'
     setUser(null);
     toast({
       title: 'Logged out',
