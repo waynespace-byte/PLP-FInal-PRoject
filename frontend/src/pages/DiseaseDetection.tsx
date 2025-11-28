@@ -6,12 +6,22 @@ import { ArrowLeft, Leaf, Loader2, Upload } from 'lucide-react';
 import { aiAPI } from '@/services/api';  // Use updated api.ts
 import { toast } from '@/hooks/use-toast';
 
+interface DiagnosisResult {
+  disease_name?: string;
+  disease?: string;
+  description: string;
+  symptoms: string;
+  treatment: string;
+  prevention: string;
+  confidence?: number;
+}
+
 const DiseaseDetection = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [diagnosis, setDiagnosis] = useState<Record<string, unknown> | null>(null);
+  const [diagnosis, setDiagnosis] = useState<DiagnosisResult | null>(null);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -37,16 +47,17 @@ const DiseaseDetection = () => {
     formData.append('image', selectedImage);
 
     try {
-      const response = await aiAPI.diseaseDetection(formData);  // Use api.ts export (matches backend /ai/disease-detection/)
-      setDiagnosis(response.data);
+      const response = await aiAPI.diseaseDetection(formData);  // Matches backend /ai/disease-detection/
+      setDiagnosis(response.data as DiagnosisResult);
       toast({
         title: 'Analysis Complete',
         description: 'Disease detection results are ready',
       });
     } catch (error: unknown) {
+      const errorMessage = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Failed to analyze image';
       toast({
         title: 'Error',
-        description: error.response?.data?.detail || 'Failed to analyze image',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -149,7 +160,7 @@ const DiseaseDetection = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="p-4 bg-muted rounded-lg">
-                  <h3 className="font-semibold text-lg mb-2">{diagnosis.disease_name || diagnosis.disease}</h3>
+                  <h3 className="font-semibold text-lg mb-2">{diagnosis.disease_name || diagnosis.disease}</h3>  // Fixed: Now typed, no underline
                   <p className="text-sm text-muted-foreground mb-2">{diagnosis.description}</p>
                   
                   <div className="space-y-3">

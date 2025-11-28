@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';  // Import toast for local errors
+import { toast } from '@/hooks/use-toast';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -17,17 +17,15 @@ const Auth = () => {
   const [registerData, setRegisterData] = useState({
     email: '', password: '', first_name: '', last_name: '', phone_number: '', role: 'farmer'
   });
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});  // For validation errors
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  // Email validation regex
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const isValidPassword = (password: string) => password.length >= 8;  // Example: min 8 chars
+  const isValidPassword = (password: string) => password.length >= 8;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors({});  // Clear previous errors
+    setErrors({});
 
-    // Frontend validation
     if (!isValidEmail(loginData.email)) {
       setErrors({ email: 'Invalid email format' });
       toast({
@@ -50,10 +48,9 @@ const Auth = () => {
     setLoading(true);
     try {
       await login(loginData.email, loginData.password);
-      console.log('Login successful, navigating to dashboard');  // Debug log
+      console.log('Login successful, navigating to dashboard');
       navigate('/dashboard');
     } catch (error: unknown) {
-      // Handle backend errors
       const errorMessage = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Login failed';
       if (errorMessage.includes('Invalid credentials') || errorMessage.includes('No active account')) {
         toast({

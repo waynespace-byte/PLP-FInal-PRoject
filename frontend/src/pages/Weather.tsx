@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Cloud, Thermometer, Droplets, Wind } from 'lucide-react'; 
+import { Loader2, Cloud, Thermometer, Droplets, Wind } from 'lucide-react';
 import { aiAPI } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 
@@ -43,7 +43,7 @@ const Weather = () => {
 
     setLoading(true);
     try {
-      const response = await aiAPI.getWeather('Nairobi');  // Matches backend /ai/weather/?location=
+      const response = await aiAPI.getWeather(location);  // Matches backend /api/v1/ai/weather/?location=
       setWeatherData(response.data.weather as WeatherData);
       setRecommendation(response.data.recommendation as Recommendation);
       toast({
@@ -110,71 +110,71 @@ const Weather = () => {
               </Card>
               <Card>
                 <CardContent className="pt-6">
-                  <div className="flex items-center gap-2">
-                    <Wind className="h-4 w-4 text-green-500" />
-                    <div>
-                      <p className="text-sm font-medium">Wind Speed</p>
-                      <p className="text-2xl font-bold">{weatherData.wind_speed} km/h</p>
-                    </div>
+                <div className="flex items-center gap-2">
+                  <Wind className="h-4 w-4 text-green-500" />
+                  <div>
+                    <p className="text-sm font-medium">Wind Speed</p>
+                    <p className="text-2xl font-bold">{weatherData.wind_speed} km/h</p>
                   </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2">
-                    <Cloud className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <p className="text-sm font-medium">Rainfall</p>
-                      <p className="text-2xl font-bold">{weatherData.rainfall} mm</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {recommendation && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Crop Recommendations</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {recommendation.crops?.map((crop: { name: string; suitability: string }, index: number) => (
-                    <div key={index} className="flex justify-between items-center p-2 border rounded">
-                      <span className="font-medium">{crop.name}</span>
-                      <span className={`px-2 py-1 rounded text-sm ${crop.suitability === 'High' ? 'bg-green-100 text-green-800' : crop.suitability === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
-                        {crop.suitability}
-                      </span>
-                    </div>
-                  ))}
                 </div>
               </CardContent>
             </Card>
-          )}
-
-          {weatherData?.forecast && (
             <Card>
-              <CardHeader>
-                <CardTitle>5-Day Forecast</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {weatherData.forecast.map((day: { date: string; temperature: number; rainfall: number }, index: number) => (
-                    <div key={index} className="flex justify-between items-center p-2 border rounded">
-                      <span>{day.date}</span>
-                      <span>{day.temperature}°C</span>
-                      <span>{day.rainfall} mm</span>
-                    </div>
-                  ))}
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2">
+                  <Cloud className="h-4 w-4 text-gray-500" />
+                  <div>
+                    <p className="text-sm font-medium">Rainfall</p>
+                    <p className="text-2xl font-bold">{weatherData.rainfall} mm</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
+          </div>
+        )}
+
+        {recommendation && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Crop Recommendations</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {recommendation.crops?.map((crop: { name: string; suitability: string }, index: number) => (
+                  <div key={index} className="flex justify-between items-center p-2 border rounded">
+                    <span className="font-medium">{crop.name}</span>
+                    <span className={`px-2 py-1 rounded text-sm ${crop.suitability === 'High' ? 'bg-green-100 text-green-800' : crop.suitability === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
+                      {crop.suitability}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {weatherData?.forecast && (
+          <Card>
+            <CardHeader>
+              <CardTitle>5-Day Forecast</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {weatherData.forecast.map((day: { date: string; temperature: number; rainfall: number }, index: number) => (
+                  <div key={index} className="flex justify-between items-center p-2 border rounded">
+                    <span>{day.date}</span>
+                    <span>{day.temperature}°C</span>
+                    <span>{day.rainfall} mm</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </CardContent>
+    </Card>
+  </div>
+);
 };
 
 export default Weather;
