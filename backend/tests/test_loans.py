@@ -5,7 +5,7 @@ from apps.users.models import User
 
 class LoanTestCase(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='testfarmer', role='farmer', phone='123456789')
+        self.user = User.objects.create_user(username='testfarmer', role='farmer', phone_number='123456789')
 
     def test_loan_application(self):
         loan = LoanRequest.objects.create(farmer=self.user, amount=1000, purpose='seeds')

@@ -6,7 +6,7 @@ from apps.users.models import User
 
 class CropRecommendationTestCase(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='testfarmer', role='farmer', phone='123456789')
+        self.user = User.objects.create_user(username='testfarmer', role='farmer', phone_number='123456789')
 
     def test_crop_recommendation_creation(self):
         recommendation = CropRecommendation.objects.create(
@@ -20,7 +20,7 @@ class CropRecommendationTestCase(TestCase):
 
 class DiseaseDetectionTestCase(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='testfarmer2', role='farmer', phone='987654321')
+        self.user = User.objects.create_user(username='testfarmer2', role='farmer', phone_number='987654321')
 
     def test_disease_detection_creation(self):
         detection = DiseaseDetection.objects.create(

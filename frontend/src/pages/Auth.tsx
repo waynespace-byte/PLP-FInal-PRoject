@@ -47,7 +47,8 @@ const Auth = () => {
 
     setLoading(true);
     try {
-      await login(loginData.email, loginData.password);
+      console.log('Login data being sent:', { email: loginData.email, password: loginData.password });
+      await login(loginData.email, loginData.password);  // Removed response handling to avoid TypeScript errors
       console.log('Login successful, navigating to dashboard');
       navigate('/dashboard');
     } catch (error: unknown) {
@@ -93,20 +94,20 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-b from-green-700 to-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-md mb-8">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome to SmartFarmLink</CardTitle>
-          <CardDescription>Login or create an account to get started</CardDescription>
+          <CardTitle className="text-3xl font-bold text-foreground">Welcome to SmartFarmLink</CardTitle>
+          <CardDescription className="text-muted-foreground mt-2 font-bold text-black">Login or create an account to get started</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-2 font-bold text-black">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="register">Register</TabsTrigger>
             </TabsList>
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4 font-bold text-black">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input

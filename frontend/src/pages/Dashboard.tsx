@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Thermometer, Droplets, Wind, Tractor } from 'lucide-react';
@@ -19,12 +20,18 @@ interface Farm {
 }
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [farms, setFarms] = useState<Farm[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchData = async () => {
+      const token = localStorage.getItem('access');  // Add: Check for token
+      if (!token) {
+        navigate('/auth');  // Add: Redirect if no token
+        return;
+      }
       try {
         const [weatherResponse, farmsResponse] = await Promise.all([
           aiAPI.getWeather('Nairobi'),  // Default location
@@ -33,6 +40,9 @@ const Dashboard = () => {
         setWeatherData(weatherResponse.data.weather as WeatherData);
         setFarms(farmsResponse.data as Farm[]);
       } catch (error: unknown) {
+        if ((error as any).response?.status === 401) {
+          navigate('/auth');  // Add: Redirect on token expiry
+        }
         const errorMessage = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Failed to load dashboard data';
         toast({
           title: 'Error',
@@ -45,7 +55,7 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, []);
+  }, [navigate]);
 
   if (loading) {
     return (

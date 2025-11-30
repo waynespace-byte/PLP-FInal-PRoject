@@ -11,3 +11,4 @@ class Farm(models.Model):
     soil_ph = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(14)])
     history = models.JSONField(default=dict)
     crops = models.JSONField(default=list)
+    location = models.CharField(max_length=100)

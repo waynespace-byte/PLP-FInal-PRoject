@@ -3,6 +3,7 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from datetime import datetime
 import tensorflow as tf
 import numpy as np
 from PIL import Image
@@ -13,12 +14,17 @@ from .serializers import DiagnosisSerializer
 class WeatherView(APIView):  # AI Weather Prediction
     def get(self, request):
         location = request.query_params.get('location')
+        if not location:
+            return Response({'error': 'Location required'}, status=400)
         # Integrate OpenWeather API
         api_key = settings.OPENWEATHER_API_KEY
         url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid={api_key}"
         response = requests.get(url).json()
+
+        date_str = datetime.fromtimestamp(response['dt']).strftime('%Y-%m-%d')
+
         # Cache and return
-        WeatherData.objects.create(location=location, date=response['dt'], temperature=response['main']['temp'], humidity=response['main']['humidity'], rainfall=response.get('rain', {}).get('1h', 0))
+        WeatherData.objects.create(location=location, date=date_str, temperature=response['main']['temp'], humidity=response['main']['humidity'], rainfall=response.get('rain', {}).get('1h', 0))
         return Response(response)
 
 class CropAdvisorView(APIView):
